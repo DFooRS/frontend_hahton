@@ -116,7 +116,6 @@ const calculate = async () => {
                 ></Knob>
                 <h3>{{ propbabilityText }}</h3>
               </div>
-
               <!-- <div class="result-content-details">
                 <div>По причине:</div>
                 <ul>
