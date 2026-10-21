@@ -10,7 +10,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: LROOP2022/actions/.github/workflows/docker-build-push.yml@v1
+    uses: LROOP2022/action/.github/workflows/docker-build-push.yml@v1
     with:
       image: ghcr.io/lroop2022/web
 
@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: write
     needs: build
-    uses: LROOP2022/actions/.github/workflows/update-kustomize.yml@v1
+    uses: LROOP2022/action/.github/workflows/update-kustomize.yml@v1
     with:
       manifests_repo: LROOP2022/hack-manifests
       manifests_path: team-frontend/web
