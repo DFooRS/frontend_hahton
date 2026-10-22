@@ -98,7 +98,16 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
 }
 
 const convertValue = (value: number): number => {
-  return Math.round(value * 100)
+  return value * 100
+}
+
+const percentFormatter = new Intl.NumberFormat('ru-RU', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+const formatPercentage = (value: number): string => {
+  return `${percentFormatter.format(convertValue(value))} %`
 }
 </script>
 
@@ -175,7 +184,11 @@ const convertValue = (value: number): number => {
                           color: 'var(--p-primary-color)',
                         },
                       ]"
-                    ></MeterGroup>
+                    >
+                      <template #label>
+                        <span class="probability-value">{{ formatPercentage(prediction.probability) }}</span>
+                      </template>
+                    </MeterGroup>
                   </div>
                 </template>
               </div>
@@ -290,6 +303,12 @@ const convertValue = (value: number): number => {
 .result-grid-title {
   font-weight: 500;
   line-height: 20px;
+}
+
+.probability-value {
+  display: block;
+  margin-top: 0.25rem;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 640px) {
