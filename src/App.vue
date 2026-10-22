@@ -50,6 +50,7 @@ const calcById = async () => {
       errorMessage.value = ''
     })
     .catch((error) => {
+      console.log(error)
       if (error.response) {
         if (error.response.status === 404) {
           errorMessage.value = 'ID объекта не найден'
