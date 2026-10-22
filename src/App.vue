@@ -189,15 +189,23 @@ const convertValue = (value: number): number => {
 
 <style>
 .container {
-  padding: 1rem;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: clamp(1rem, 3vw, 2rem);
   display: flex;
   justify-content: center;
 }
 
 .content {
+  width: min(100%, 960px);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2rem 1rem;
+  align-content: start;
+}
+
+.content > * {
+  min-width: 0;
 }
 
 .title {
@@ -214,7 +222,7 @@ const convertValue = (value: number): number => {
 }
 
 .full-width {
-  grid-column: 1 / 3;
+  grid-column: 1 / -1;
 }
 
 .card-content {
@@ -225,14 +233,12 @@ const convertValue = (value: number): number => {
 
 .control-content {
   height: 100%;
-  min-width: 380px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
 
 .control-fileupload {
-  min-width: 380px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -272,12 +278,58 @@ const convertValue = (value: number): number => {
   padding-top: 1rem;
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 4fr;
+  grid-template-columns: minmax(7rem, 1fr) minmax(0, 4fr);
   gap: 1rem 0.5rem;
+}
+
+.result-grid > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .result-grid-title {
   font-weight: 500;
   line-height: 20px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    line-height: 1.4;
+  }
+
+  .control-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control-content > *,
+  .control-content .p-button,
+  .control-fileupload .p-fileupload,
+  .control-fileupload .p-button {
+    width: 100%;
+  }
+
+  .control-fileupload {
+    align-items: stretch;
+  }
+
+  .result-grid {
+    grid-template-columns: minmax(5.5rem, 1fr) minmax(0, 2fr);
+    font-size: 0.875rem;
+  }
 }
 </style>
