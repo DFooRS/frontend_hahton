@@ -50,15 +50,12 @@ const calcById = async () => {
       errorMessage.value = ''
     })
     .catch((error) => {
-      console.log(error)
-      if (error.response) {
-        if (error.response.status === 404) {
-          errorMessage.value = 'ID объекта не найден'
-        }
+      if (error.response && error.response.status === 404) {
+        errorMessage.value = 'ID объекта не найден'
+      } else {
         errorMessage.value = 'Произошла ошибка при расчете'
-        showError.value = true
       }
-      console.log(error)
+      showError.value = true
     })
     .finally(() => (loading.value = false))
 }
@@ -88,12 +85,11 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
         }
       })
       .catch((error) => {
-        if (error.response) {
-          if (error.response.status === 413) {
-            errorMessage.value = 'Файл слишком большой'
-          }
+        if (error.response && error.response.status === 413) {
+          errorMessage.value = 'Файл слишком большой'
+        } else {
+          errorMessage.value = 'Произошла ошибка при расчете'
         }
-        console.log(error)
       })
       .finally(() => (loading.value = false))
   } else {
