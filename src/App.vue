@@ -39,9 +39,13 @@ const calcById = async () => {
   loading.value = false
 
   await axios
-    .post('/api/v1/predict/by-id', JSON.stringify({ index: String(objId.value) }), {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    .post(
+      'https://api.team-backend.hack.week-infra.ru/api/v1/predict/by-id',
+      JSON.stringify({ index: String(objId.value) }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
     .then((response) => {
       const _data: ByIdResponse = JSON.parse(response.data)
       predictions.value = [_data]
@@ -68,11 +72,7 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
     formData.append('file', file)
 
     await axios
-      .post('/api/v1/predict/csv', formData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      .post('https://api.team-backend.hack.week-infra.ru/api/v1/predict/csv', formData)
       .then((response) => {
         showError.value = false
         errorMessage.value = ''
