@@ -173,7 +173,7 @@ const convertValue = (value: number): number => {
                     <MeterGroup
                       :value="[
                         {
-                          label: `Вероятность банкротства: ${convertValue(prediction.probability)}%`,
+                          label: '',
                           value: convertValue(prediction.probability),
                           color: 'var(--p-primary-color)',
                         },
