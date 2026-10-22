@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
 import {
   Card,
   InputNumber,
   Button,
   FileUpload,
-  Knob,
+  ProgressBar,
   ProgressSpinner,
   type FileUploadSelectEvent,
 } from 'openvue'
@@ -21,57 +21,30 @@ interface CsvResponse {
 }
 
 const objId = ref<number | undefined>()
-const probability = ref<number>(95)
 const loading = ref<boolean>(false)
 const showError = ref<boolean>(false)
 const showResult = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
-declare type Probability = 'HIGH' | 'MEDIUM' | 'LOW'
-
-const knobColor = computed((): string => {
-  const _probability = getProbability()
-  if (_probability === 'HIGH') {
-    return '#dc2626'
-  } else if (_probability === 'MEDIUM') {
-    return '#f59e0b'
-  }
-  return '#22c55e'
-})
-
-const propbabilityText = computed((): string => {
-  const _probability = getProbability()
-  if (_probability === 'HIGH') {
-    return 'Высокая'
-  } else if (_probability === 'MEDIUM') {
-    return 'Средняя'
-  }
-  return 'Низкая'
-})
-
-const getProbability = (): Probability => {
-  if (probability.value >= 66) {
-    return 'HIGH'
-  } else if (probability.value >= 33) {
-    return 'MEDIUM'
-  }
-  return 'LOW'
-}
+const predictions = ref<ByIdResponse[]>([])
 
 const calcById = async () => {
-  if (!probability.value) {
+  if (!objId.value) {
     return
   }
   showResult.value = true
   loading.value = true
 
+  predictions.value = [{ index: String(objId.value), probability: 0.265987646 }]
+  loading.value = false
+
   await axios
-    .post('/api/v1/predict/by-id', JSON.stringify({ index: String(probability.value) }), {
+    .post('/api/v1/predict/by-id', JSON.stringify({ index: String(objId.value) }), {
       headers: { 'Content-Type': 'application/json' },
     })
     .then((response) => {
       const _data: ByIdResponse = JSON.parse(response.data)
-      probability.value = convertValue(_data.probability)
+      predictions.value = [_data]
       showError.value = false
       errorMessage.value = ''
     })
@@ -108,8 +81,9 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
         if (_data.predictions.length === 0) {
           errorMessage.value = 'Произошла ошибка при расчете'
           showError.value = true
+          predictions.value = []
         } else {
-          probability.value = convertValue(_data.predictions[0]?.probability!)
+          predictions.value = _data.predictions
         }
       })
       .catch((error) => {
@@ -134,8 +108,10 @@ const convertValue = (value: number): number => {
   <div class="container">
     <div class="content">
       <div class="full-width">
-        <h1>Оценка вероятности банкротства физлица</h1>
-        <div>Для рассчета укажите ID объекта из датасета или загрузите csv файл</div>
+        <div class="title">Оценка вероятности банкротства физлица</div>
+        <div class="subtitle">
+          Для рассчета укажите ID объекта из датасета или загрузите csv файл
+        </div>
       </div>
 
       <Card>
@@ -186,16 +162,22 @@ const convertValue = (value: number): number => {
               <div>{{ errorMessage }}</div>
             </template>
             <template v-else>
-              <div class="result-content-column">
-                <Knob
-                  v-model="probability"
-                  :size="150"
-                  readonly
-                  :value-color="knobColor"
-                  :text-color="knobColor"
-                  value-template="{value}%"
-                ></Knob>
-                <h3>{{ propbabilityText }}</h3>
+              <div class="result-grid">
+                <div class="result-grid-title">ID объекта</div>
+                <div class="result-grid-title">Оценка риска моделью</div>
+
+                <template v-for="prediction in predictions" :key="prediction.index">
+                  <div>{{ prediction.index }}</div>
+                  <div>
+                    <ProgressBar
+                      :value="convertValue(prediction.probability)"
+                      v-tooltip="{
+                        value: `${convertValue(prediction.probability)}%`,
+                        disabled: convertValue(prediction.probability) > 2,
+                      }"
+                    ></ProgressBar>
+                  </div>
+                </template>
               </div>
             </template>
           </div>
@@ -216,6 +198,19 @@ const convertValue = (value: number): number => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem 1rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 24pt;
+  letter-spacing: 0.15px;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 20pt;
 }
 
 .full-width {
@@ -271,5 +266,18 @@ const convertValue = (value: number): number => {
 .error-icon {
   font-size: 3rem;
   color: #dc2626;
+}
+
+.result-grid {
+  padding-top: 1rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+  gap: 1rem 0.5rem;
+}
+
+.result-grid-title {
+  font-weight: 500;
+  line-height: 20px;
 }
 </style>
