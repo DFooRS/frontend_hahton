@@ -7,7 +7,8 @@ import { createPinia } from 'pinia'
 import OpenVue from 'openvue/config'
 import Aura from '@openvue/themes/aura'
 import { definePreset } from '@openvue/themes'
-import { ru } from "primelocale/js/ru.js";
+import { ru } from 'primelocale/js/ru.js'
+import { Tooltip } from 'openvue'
 
 import App from './App.vue'
 import router from './router'
@@ -41,7 +42,8 @@ app.use(OpenVue, {
       darkModeSelector: '.my-app-dark',
     },
   },
-  locale: ru
+  locale: ru,
 })
 
+app.directive('tooltip', Tooltip)
 app.mount('#app')
