@@ -66,7 +66,9 @@ const calcById = async () => {
   loading.value = true
 
   await axios
-    .post('/api/v1/predict/by-id', JSON.stringify({ index: String(probability.value) }))
+    .post('/api/v1/predict/by-id', JSON.stringify({ index: String(probability.value) }), {
+      headers: { 'Content-Type': 'application/json' },
+    })
     .then((response) => {
       const _data: ByIdResponse = JSON.parse(response.data)
       probability.value = convertValue(_data.probability)
@@ -93,7 +95,11 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
     formData.append('file', file)
 
     await axios
-      .post('/api/v1/predict/csv', formData)
+      .post('/api/v1/predict/csv', formData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       .then((response) => {
         showError.value = false
         errorMessage.value = ''
