@@ -7,6 +7,7 @@ import { createPinia } from 'pinia'
 import OpenVue from 'openvue/config'
 import Aura from '@openvue/themes/aura'
 import { definePreset } from '@openvue/themes'
+import { ru } from "primelocale/js/ru.js";
 
 import App from './App.vue'
 import router from './router'
@@ -40,6 +41,7 @@ app.use(OpenVue, {
       darkModeSelector: '.my-app-dark',
     },
   },
+  locale: ru
 })
 
 app.mount('#app')

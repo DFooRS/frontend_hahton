@@ -1,12 +1,31 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Card, InputNumber, Button, FileUpload, Knob, ProgressSpinner } from 'openvue'
+import axios from 'axios'
+import {
+  Card,
+  InputNumber,
+  Button,
+  FileUpload,
+  Knob,
+  ProgressSpinner,
+  type FileUploadSelectEvent,
+} from 'openvue'
+
+interface ByIdResponse {
+  index: string
+  probability: number
+}
+
+interface CsvResponse {
+  predictions: ByIdResponse[]
+}
 
 const objId = ref<number | undefined>()
 const probability = ref<number>(95)
 const loading = ref<boolean>(false)
-const error = ref<boolean>(false)
+const showError = ref<boolean>(false)
 const showResult = ref<boolean>(false)
+const errorMessage = ref<string>('')
 
 declare type Probability = 'HIGH' | 'MEDIUM' | 'LOW'
 
@@ -39,10 +58,69 @@ const getProbability = (): Probability => {
   return 'LOW'
 }
 
-const calculate = async () => {
+const calcById = async () => {
+  if (!probability.value) {
+    return
+  }
   showResult.value = true
   loading.value = true
-  loading.value = false
+
+  await axios
+    .post('/api/v1/predict/by-id', JSON.stringify({ index: String(probability.value) }))
+    .then((response) => {
+      const _data: ByIdResponse = JSON.parse(response.data)
+      probability.value = convertValue(_data.probability)
+      showError.value = false
+      errorMessage.value = ''
+    })
+    .catch((error) => {
+      if (error.response && error.response.status === 404) {
+        errorMessage.value = 'ID объекта не найден'
+      }
+      errorMessage.value = 'Произошла ошибка при расчете'
+      showError.value = true
+    })
+    .finally(() => (loading.value = false))
+}
+
+const loadCsv = async (event: FileUploadSelectEvent) => {
+  if (event.files) {
+    showResult.value = true
+    loading.value = true
+
+    const file = event.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+
+    await axios
+      .post('/api/v1/predict/csv', formData)
+      .then((response) => {
+        showError.value = false
+        errorMessage.value = ''
+
+        const _data: CsvResponse = JSON.parse(response.data)
+        if (_data.predictions.length === 0) {
+          errorMessage.value = 'Произошла ошибка при расчете'
+          showError.value = true
+        } else {
+          probability.value = convertValue(_data.predictions[0]?.probability!)
+        }
+      })
+      .catch((error) => {
+        if (error.response && error.response.status === 413) {
+          errorMessage.value = 'Файл слишком большой'
+        }
+        errorMessage.value = 'Произошла ошибка при расчете'
+        showError.value = true
+      })
+      .finally(() => (loading.value = false))
+  } else {
+    console.log('event.files is empty')
+  }
+}
+
+const convertValue = (value: number): number => {
+  return Math.round(value * 100)
 }
 </script>
 
@@ -60,7 +138,7 @@ const calculate = async () => {
           <div class="card-content control-content">
             <InputNumber v-model="objId" allow-empty :use-grouping="false" fluid></InputNumber>
             <div>
-              <Button label="Рассчитать" :disabled="loading || !objId" @click="calculate"></Button>
+              <Button label="Рассчитать" :disabled="loading || !objId" @click="calcById"></Button>
             </div>
           </div>
         </template>
@@ -69,30 +147,27 @@ const calculate = async () => {
       <Card>
         <template #subtitle>Загрузить CSV</template>
         <template #content>
-          <FileUpload
-            :disabled="loading"
-            name="demo[]"
-            :multiple="false"
-            accept=".csv"
-            :max-file-size="10485760"
-            choose-label="Выбрать"
-            :choose-button-props="{ outlined: true }"
-            upload-label="Обработать"
-            cancel-label="Очистить"
-            @upload="calculate"
-          >
-            <template #empty>
-              <div>Перетащите файлы для загрузки</div>
-              <div>или воспользуйтесь кнопкой Выбрать</div>
-            </template>
-          </FileUpload>
+          <div class="control-fileupload">
+            <FileUpload
+              :disabled="loading"
+              mode="basic"
+              name="file[]"
+              accept=".csv"
+              custom-upload
+              invalid-file-size-message="	{0}: Размер файла должен быть меньше {1}"
+              choose-label="Загрузить"
+              choose-icon="oi oi-upload"
+              :choose-button-props="{ outlined: true }"
+              @select="loadCsv"
+            ></FileUpload>
+          </div>
         </template>
       </Card>
 
       <Card v-if="showResult" class="full-width">
         <template #title>Вероятность банкротства</template>
         <template #content>
-          <div class="card-content result-content">
+          <div class="result-content">
             <template v-if="loading">
               <ProgressSpinner
                 style="width: 100px; height: 100px"
@@ -100,9 +175,9 @@ const calculate = async () => {
               ></ProgressSpinner>
               <div>Данные обрабатываются</div>
             </template>
-            <template v-else-if="error">
+            <template v-else-if="showError">
               <i class="oi oi-times-circle error-icon"></i>
-              <div>Произошла ошибка при расчете</div>
+              <div>{{ errorMessage }}</div>
             </template>
             <template v-else>
               <div class="result-content-column">
@@ -116,13 +191,6 @@ const calculate = async () => {
                 ></Knob>
                 <h3>{{ propbabilityText }}</h3>
               </div>
-              <!-- <div class="result-content-details">
-                <div>По причине:</div>
-                <ul>
-                  <li>Лох</li>
-                  <li>Нищеброд</li>
-                </ul>
-              </div> -->
             </template>
           </div>
         </template>
@@ -156,17 +224,35 @@ const calculate = async () => {
 
 .control-content {
   height: 100%;
+  min-width: 380px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
 
-.result-content {
+.control-fileupload {
+  min-width: 380px;
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
+  align-items: end;
+  gap: 2rem;
+}
+
+.result-error {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: start;
-  gap: 5rem;
+  align-items: center;
+  gap: 1rem;
+}
+
+.result-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
 }
 
 .result-content-column {
