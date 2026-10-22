@@ -35,9 +35,6 @@ const calcById = async () => {
   showResult.value = true
   loading.value = true
 
-  predictions.value = [{ index: String(objId.value), probability: 0.265987646 }]
-  loading.value = false
-
   await axios
     .post(
       'https://api.team-backend.hack.week-infra.ru/api/v1/predict/by-id',
@@ -48,7 +45,7 @@ const calcById = async () => {
     )
     .then((response) => {
       console.log(response)
-      const _data: ByIdResponse = JSON.parse(response.data)
+      const _data: ByIdResponse = response.data
       predictions.value = [_data]
       showError.value = false
       errorMessage.value = ''
@@ -82,7 +79,7 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
         showError.value = false
         errorMessage.value = ''
 
-        const _data: CsvResponse = JSON.parse(response.data)
+        const _data: CsvResponse = response.data
         if (_data.predictions.length === 0) {
           errorMessage.value = 'Произошла ошибка при расчете'
           showError.value = true
