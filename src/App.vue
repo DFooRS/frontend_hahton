@@ -47,7 +47,7 @@ const calcById = async () => {
       },
     )
     .then((response) => {
-      console.log(response.data)
+      console.log(response)
       const _data: ByIdResponse = JSON.parse(response.data)
       predictions.value = [_data]
       showError.value = false
@@ -78,6 +78,7 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
     await axios
       .post('https://api.team-backend.hack.week-infra.ru/api/v1/predict/csv', formData)
       .then((response) => {
+        console.log(response)
         showError.value = false
         errorMessage.value = ''
 
@@ -95,8 +96,8 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
           if (error.response.status === 413) {
             errorMessage.value = 'Файл слишком большой'
           }
-          console.log(error)
         }
+        console.log(error)
       })
       .finally(() => (loading.value = false))
   } else {
