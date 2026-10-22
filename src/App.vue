@@ -6,8 +6,8 @@ import {
   InputNumber,
   Button,
   FileUpload,
-  ProgressBar,
   ProgressSpinner,
+  MeterGroup,
   type FileUploadSelectEvent,
 } from 'openvue'
 
@@ -44,7 +44,6 @@ const calcById = async () => {
       },
     )
     .then((response) => {
-      console.log(response)
       const _data: ByIdResponse = response.data
       predictions.value = [_data]
       showError.value = false
@@ -75,7 +74,6 @@ const loadCsv = async (event: FileUploadSelectEvent) => {
     await axios
       .post('https://api.team-backend.hack.week-infra.ru/api/v1/predict/csv', formData)
       .then((response) => {
-        console.log(response)
         showError.value = false
         errorMessage.value = ''
 
@@ -172,13 +170,15 @@ const convertValue = (value: number): number => {
                 <template v-for="prediction in predictions" :key="prediction.index">
                   <div>{{ prediction.index }}</div>
                   <div>
-                    <ProgressBar
-                      :value="convertValue(prediction.probability)"
-                      v-tooltip="{
-                        value: `${convertValue(prediction.probability)}%`,
-                        disabled: convertValue(prediction.probability) > 2,
-                      }"
-                    ></ProgressBar>
+                    <MeterGroup
+                      :value="[
+                        {
+                          label: `Вероятность банкротства: ${convertValue(prediction.probability)}%`,
+                          value: convertValue(prediction.probability),
+                          color: 'var(--p-primary-color)',
+                        },
+                      ]"
+                    ></MeterGroup>
                   </div>
                 </template>
               </div>
